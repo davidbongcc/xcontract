@@ -2,6 +2,7 @@ let request = require("superagent");
 let Web3 = require("web3");
 let web3 = new Web3();
 
+//TODO refactor
 module.exports = {
 
     checkIfContractIsVerified : (contractAddress, cb) =>
@@ -21,19 +22,26 @@ module.exports = {
             }
         });
     },
-
+    //TODO handle payable functions in here
     extractAbiFunctions : (abi) =>
     {
-        let arrayOfFunctionObjects = [];
+        let functionObjects = {};
+        let functionArray = [];
+        let isPayableFunctionArray = [];
 
         for(i=0; i < abi.length; i++)
         {
             if(abi[i].type == "function")
             {
-                arrayOfFunctionObjects.push(abi[i]);
+                functionArray.push(abi[i]);
+                isPayableFunctionArray.push(isPayable(abi[i]));
             }
         }
-        return arrayOfFunctionObjects;
+
+        functionObjects.functionsInContract = functionArray;
+        functionObjects.isPayable = isPayableFunctionArray;
+
+        return functionObjects;
     },
 
     getContractFunctionNamesAndParams : (abiFunctions) =>
@@ -43,22 +51,37 @@ module.exports = {
         let functionParamFields = [];
         let readOnlyParamInputs = [];
 
-        for(abiFunc of abiFunctions)
+        for(i=0; i < abiFunctions.functionsInContract.length; i++)
         {
-            let functionName = abiFunc.name;
-            let functionParams = JSON.stringify(abiFunc.inputs[0]);
+            let functionName = abiFunctions.functionsInContract[i].name;
+            let functionParams = JSON.stringify(abiFunctions.functionsInContract[i].inputs[0]);
             //create jade elements for each function with name and param
             functionNameFields.push(functionName);
-            functionParamFields.push(functionParams);
-            //if there are no params then set the input to readonly
-            console.log("here is each function param" + functionParams);
-            if(functionParams == undefined)
+            if(abiFunctions.isPayable[i] == true)
             {
-                readOnlyParamInputs.push(true);
+                if(functionParams != null)
+                {
+                    readOnlyParamInputs.push(false);
+                    functionParamFields.push(functionParams + ',{"name":"value","type":"uint256"}');
+                }
+                else
+                {
+                    readOnlyParamInputs.push(false);
+                    functionParamFields.push('{"name":"value","type":"uint256"}');
+                }
             }
             else
             {
-                readOnlyParamInputs.push(false);
+                if(functionParams != null)
+                {
+                    readOnlyParamInputs.push(false);
+                    functionParamFields.push(functionParams);
+                }
+                else
+                {
+                    readOnlyParamInputs.push(false);
+                    functionParamFields.push(null);
+                }
             }
         }
 
@@ -69,6 +92,7 @@ module.exports = {
         return nameAndParamObj;
     },
 
+    //TODO add value as a param to payable function, find a way to make a call too instead of tx for some funcs
     executeContractFunction : (contract, functionName, params) =>
     {
          //must use bracket notation as function name is passed as a string
@@ -97,3 +121,15 @@ module.exports = {
         return web3.isAddress(address);
     }
 };
+
+function isPayable(abi)
+{
+    if(typeof abi.payable != 'undefined')
+    {
+        if(abi.payable == true)
+        {
+            return true;
+        }
+    }
+    return false;
+}

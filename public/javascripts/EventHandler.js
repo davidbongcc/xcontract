@@ -104,10 +104,9 @@ $(() =>
 
     function initTransaction(txObj)
     {
-        console.log("transaction initiated");
-
         try
         {
+            //TODO make sure it can handle multiple params seperated by a comma
             web3Handler.executeContractFunction(contract, txObj.functionCalled, txObj.filledOutParams);
         }
         catch(exception)
