@@ -35,6 +35,14 @@ $(() =>
         }
     }
 
+    function checkIfCallOnlyFunction(txObj, callback)
+    {
+        web3Handler.callContractFunction(txObj.contractAddress,
+            txObj.functionCalled, txObj.filledOutParams, (isCallable) => {
+                callback(isCallable);
+            });
+    }
+
     $(':button').click(function(e)
     {
         let contractAddress = $("#contractAddress").val().trim();
@@ -104,15 +112,22 @@ $(() =>
 
     function initTransaction(txObj)
     {
-        try
+        checkIfCallOnlyFunction(txObj, (isCallable) =>
         {
-            //TODO make sure it can handle multiple params seperated by a comma
-            web3Handler.executeContractFunction(contract, txObj.functionCalled, txObj.filledOutParams);
-        }
-        catch(exception)
-        {
-            console.log("transaction failed. Error: " + exception);
-        }
+            //if callable then there is no need to create a transaction
+            if(isCallable) return;
+
+            console.log("transaction initiated");
+
+            try
+            {
+                web3Handler.executeContractFunction(contract, txObj.functionCalled, txObj.filledOutParams);
+            }
+            catch(exception)
+            {
+                console.log("transaction failed. Error: " + exception);
+            }
+        });
     }
 
     //gets each param for each function, returns them one by one
