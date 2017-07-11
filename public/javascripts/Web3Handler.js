@@ -105,11 +105,15 @@ module.exports = {
          }
          else
          {
-             contract[functionName](params, (err, data) =>
-             {
-                 if(err) throw err;
+             contract[functionName](params, (err, data) => {
+                 if (err) throw err;
              });
          }
+    },
+
+    checkIfPayable : (abi, functionName) =>
+    {
+        return abi[functionName]["payable"];
     },
 
     callContractFunction : (contract, functionName, params, callback) =>

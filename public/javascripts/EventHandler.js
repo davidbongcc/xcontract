@@ -94,15 +94,19 @@ $(() =>
         txObj.abi = abi;
         txObj.contractAddress = contractAddress;
 
+        let isPayable = web3Handler.checkIfPayable(abi, functionCalled);
+
         try
         {
             //handles NPE on parameter-less contract functions
             txObj.filledOutParams = document.getElementById(params).value; //gets the user input from textbox
+            if(isPayable) txObj.filledOutParams += '{"name" : "value", "type" : "uint256"}';
         }
         catch(exception)
         {
-            console.log("param is null: " + exception);
-            txObj.filledOutParams = null;
+            console.log(exception);
+            if(isPayable) txObj.filledOutParams = '{"name" : "value", "type" : "uint256"}';
+            else txObj.filledOutParams = null;
         }
 
         console.log("filled out params from user input: " + txObj.filledOutParams);
