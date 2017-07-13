@@ -54,10 +54,20 @@ module.exports = {
         for(i=0; i < abiFunctions.functionsInContract.length; i++)
         {
             let functionName = abiFunctions.functionsInContract[i].name;
-            let functionParams = JSON.stringify(abiFunctions.functionsInContract[i].inputs[0]);
             //create jade elements for each function with name and param
             functionNameFields.push(functionName);
             if(abiFunctions.isPayable[i] == true)
+            let functionName = abiFunc.name;
+            let functionParams = [];
+
+            for(input of abiFunc.inputs) functionParams.push(JSON.stringify(input));
+
+            //create jade elements for each function with name and param
+            functionNameFields.push(functionName);
+            functionParamFields.push(functionParams);
+
+            //if there are no params then set the input to readonly
+            if(functionParams.length == 0)
             {
                 if(functionParams != null)
                 {
@@ -123,7 +133,6 @@ module.exports = {
         {
             contract.call()[functionName]( (err, data) =>
             {
-                //TODO make sure error is thrown when using a call incorrectly (when should use a transaction)
                 if(err)
                 {
                     callback(false);
