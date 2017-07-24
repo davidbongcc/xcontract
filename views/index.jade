@@ -38,7 +38,7 @@ html(lang='en')
       //Primary Page Layout
       //––––––––––––––––––––––––––––––––––––––––––––––––––
 
-      a.github-fork-ribbon(href='https://github.com/James-Sangalli/xcontract', title='Fork me on GitHub') Fork me on GitHub
+      //a.github-fork-ribbon(href='https://github.com/James-Sangalli/xcontract', title='Fork me on GitHub') Fork me on GitHub
     div
         ul
             li
@@ -55,7 +55,7 @@ html(lang='en')
           | xcontract
       .twelve.columns
         h6
-          | Run your live smart contracts here!
+          | Run your Quorum smart contracts here!
         h6 #{warning}
 
       #abiDiv
@@ -66,10 +66,6 @@ html(lang='en')
           textarea#contractAddress(name='contractAddress', placeholder="Paste the smart contract's address here" ) #{addressVal}
           p
           button#submit Run Contract
-          #{etherscanURL}
-            if(typeof (etherscanURL) != 'undefined')
-              a(href=etherscanURL)
-                button(name="etherScanURLButton") View on Etherscan
 
         #paramAndFunctionDiv
             h6 #{functionTitle}

@@ -1,6 +1,7 @@
 let express = require('express');
 let router = express.Router();
 let web3Handler = require("../public/javascripts/Web3Handler.js");
+let db = require("../public/javascripts/db.js");
 
 /* GET home page. */
 router.get('/', (req, res, next) => {
@@ -9,25 +10,22 @@ router.get('/', (req, res, next) => {
 
 router.get("/api/:contractAddress", (req,res,next) => {
 
-    //TODO should not display if not mainnet
     let contractAddress = req.params.contractAddress;
-    let etherscanURL = "https://etherscan.io/address/" + contractAddress;
 
-    web3Handler.checkIfContractIsVerified(contractAddress, (err, data) =>
+    db.checkIfContractIsRegistered(contractAddress, (isRegistered, data) =>
     {
-        if(data.body.message === "NOTOK")
+        if(!isRegistered)
         {
             res.render('index', {
                 abiError: "PLEASE PASTE ABI HERE",
                 addressVal: contractAddress,
                 functionTitle:"Smart Contract Functions",
-                warning:"NO ABI FOUND AS CONTRACT IS NOT VERIFIED ON ETHERSCAN",
-                etherscanURL : etherscanURL
+                warning:"NO ABI FOUND AS CONTRACT IS NOT REGISTERED",
             });
         }
         else
         {
-            res.redirect('/api/' + data.body.result + "/" + contractAddress);
+            res.redirect('/api/' + data.body[0].abi + "/" + contractAddress);
         }
     });
 });
@@ -43,12 +41,10 @@ router.get('/api/:abi/:address', (req,res,next) => {
     //function and param names
     let functionNameAndParamObj = web3Handler.getContractFunctionNamesAndParams(abiFunctions);
     //sets up function calls to contract from UI
-    //TODO should not display if not mainnet
-    let etherscanURL = "https://etherscan.io/address/" + contractAddress;
 
-    web3Handler.checkIfContractIsVerified(contractAddress, (error, data) =>
+    db.checkIfContractIsRegistered(contractAddress, (isRegistered, data) =>
     {
-        if(data.body.message === "NOTOK")
+        if(!isRegistered)
         {
             res.render('index', {
                 abiVal: JSON.stringify(abiJson),
@@ -56,9 +52,8 @@ router.get('/api/:abi/:address', (req,res,next) => {
                 functionNames: functionNameAndParamObj.names,
                 functionParams : functionNameAndParamObj.params,
                 functionTitle:"Smart Contract Functions",
-                warning:"Warning! Contract source code is not verified on etherscan!",
-                readOnlyAttribute: functionNameAndParamObj.readOnly,
-                etherscanURL : etherscanURL
+                warning:"Warning! Contract source code is not registered!",
+                readOnlyAttribute: functionNameAndParamObj.readOnly
             });
         }
         else
@@ -69,9 +64,8 @@ router.get('/api/:abi/:address', (req,res,next) => {
                 functionNames: functionNameAndParamObj.names,
                 functionParams : functionNameAndParamObj.params,
                 functionTitle:"Smart Contract Functions",
-                warning:"Contract source code is verified on etherscan!",
-                readOnlyAttribute: functionNameAndParamObj.readOnly,
-                etherscanURL : etherscanURL
+                warning:"Contract source code is registered!",
+                readOnlyAttribute: functionNameAndParamObj.readOnly
             });
         }
     });

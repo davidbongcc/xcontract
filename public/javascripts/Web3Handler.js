@@ -4,24 +4,6 @@ let web3 = new Web3();
 
 module.exports = {
 
-    checkIfContractIsVerified : (contractAddress, cb) =>
-    {
-        let etherScanApi = "http://api.etherscan.io/api?module=contract&action=getabi&address=";
-
-        request.get(etherScanApi + contractAddress, (error, data) =>
-        {
-            if(error)
-            {
-                cb(error, null);
-                throw error;
-            }
-            else
-            {
-                cb(null, data);
-            }
-        });
-    },
-
     extractAbiFunctions : (abi) =>
     {
         let arrayOfFunctionObjects = [];
