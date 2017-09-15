@@ -2,37 +2,31 @@ let request = require("superagent");
 let Web3 = require("web3");
 let web3 = new Web3();
 
-//TODO refactor
 module.exports = {
 
-    checkIfContractIsVerified : (contractAddress, cb) =>
+    checkIfContractIsVerified: (contractAddress, cb) =>
     {
         let etherScanApi = "http://api.etherscan.io/api?module=contract&action=getabi&address=";
 
-        request.get(etherScanApi + contractAddress, (error, data) =>
-        {
-            if(error)
-            {
+        request.get(etherScanApi + contractAddress, (error, data) => {
+            if (error) {
                 cb(error, null);
                 throw error;
             }
-            else
-            {
+            else {
                 cb(null, data);
             }
         });
     },
+    
     //TODO handle payable functions in here
-    extractAbiFunctions : (abi) =>
-    {
+    extractAbiFunctions: (abi) => {
         let functionObjects = {};
         let functionArray = [];
         let isPayableFunctionArray = [];
 
-        for(i=0; i < abi.length; i++)
-        {
-            if(abi[i].type == "function")
-            {
+        for (i = 0; i < abi.length; i++) {
+            if (abi[i].type == "function") {
                 functionArray.push(abi[i]);
                 isPayableFunctionArray.push(isPayable(abi[i]));
             }
@@ -44,54 +38,38 @@ module.exports = {
         return functionObjects;
     },
 
-    getContractFunctionNamesAndParams : (abiFunctions) =>
+    getContractFunctionNamesAndParams: (abiFunctions) =>
     {
         let nameAndParamObj = {};
         let functionNameFields = [];
         let functionParamFields = [];
         let readOnlyParamInputs = [];
 
-        for(i=0; i < abiFunctions.functionsInContract.length; i++)
+        for (i = 0; i < abiFunctions.functionsInContract.length; i++)
         {
             let functionName = abiFunctions.functionsInContract[i].name;
             //create jade elements for each function with name and param
             functionNameFields.push(functionName);
-            if(abiFunctions.isPayable[i] == true)
-            let functionName = abiFunc.name;
+            if (abiFunctions.isPayable[i] == true)
+                let functionName = abiFunc.name;
             let functionParams = [];
 
-            for(input of abiFunc.inputs) functionParams.push(JSON.stringify(input));
+            for (input of abiFunc.inputs) functionParams.push(JSON.stringify(input));
 
             //create jade elements for each function with name and param
             functionNameFields.push(functionName);
             functionParamFields.push(functionParams);
 
             //if there are no params then set the input to readonly
-            if(functionParams.length == 0)
+            if (functionParams.length == 0)
             {
-                if(functionParams != null)
-                {
-                    readOnlyParamInputs.push(false);
-                    functionParamFields.push(functionParams + ',{"name":"value","type":"uint256"}');
-                }
-                else
-                {
-                    readOnlyParamInputs.push(false);
-                    functionParamFields.push('{"name":"value","type":"uint256"}');
-                }
+                readOnlyParamInputs.push(false);
+                functionParamFields.push('{"name":"value","type":"uint256"}');
             }
             else
             {
-                if(functionParams != null)
-                {
-                    readOnlyParamInputs.push(false);
-                    functionParamFields.push(functionParams);
-                }
-                else
-                {
-                    readOnlyParamInputs.push(false);
-                    functionParamFields.push(null);
-                }
+                readOnlyParamInputs.push(false);
+                functionParamFields.push(null);
             }
         }
 
@@ -103,74 +81,19 @@ module.exports = {
     },
 
     //TODO add value as a param to payable function, find a way to make a call too instead of tx for some funcs
-    executeContractFunction : (contract, functionName, params) =>
-    {
-         //must use bracket notation as function name is passed as a string
-         if(params == null)
-         {
-             contract[functionName]( (err, data) =>
-             {
-                 if(err) throw err;
-             });
-         }
-         else
-         {
-             contract[functionName](params, (err, data) => {
-                 if (err) throw err;
-             });
-         }
+    executeContractFunction: (contract, functionName, params, cb) => {
+        contract[functionName](params, (err, data) => {
+            if (err) throw err;
+            cb(data);
+        });
     },
 
-    checkIfPayable : (abi, functionName) =>
-    {
+    checkIfPayable: (abi, functionName) => {
         return abi[functionName]["payable"];
     },
 
-    callContractFunction : (contract, functionName, params, callback) =>
-    {
-        //must use bracket notation as function name is passed as a string
-        if(params == null)
-        {
-            contract.call()[functionName]( (err, data) =>
-            {
-                if(err)
-                {
-                    callback(false);
-                    throw err;
-                }
-                alert("here is the response from web3: " + data);
-                callback(true);
-            });
-        }
-        else
-        {
-            contract.call()[functionName](params, (err, data) =>
-            {
-                if(err)
-                {
-                    callback(false);
-                    throw err;
-                }
-                alert("here is the response from web3: " + data);
-                callback(true);
-            });
-        }
-    },
-
-    checkAddressValidity : (address) =>
-    {
+    checkAddressValidity: (address) => {
         return web3.isAddress(address);
     }
-};
 
-function isPayable(abi)
-{
-    if(typeof abi.payable != 'undefined')
-    {
-        if(abi.payable == true)
-        {
-            return true;
-        }
-    }
-    return false;
-}
+};
